@@ -1,0 +1,5 @@
+{
+  "name": "Hydrogen Cooled Generator Rotor Dynamics",
+  "description": "A specialized rotor dynamics simulator for large-scale steam turbine generators. Visualizes natural frequencies and mode shapes with radial, longitudinal, and isometric views.",
+  "requestFramePermissions": []
+}
