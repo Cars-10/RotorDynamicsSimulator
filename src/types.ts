@@ -65,3 +65,24 @@ export enum ViewType {
   ISOMETRIC = 'Isometric',
   ALL = 'All Views'
 }
+
+export interface CampbellPoint {
+  rpm: number;
+  modes: {
+    frequency: number;
+    damping: number;
+    whirl: 'forward' | 'backward' | 'mixed';
+  }[];
+}
+
+export interface AnalysisResult {
+  points: CampbellPoint[];
+  criticalSpeeds: number[];
+  stabilityThreshold: number;
+}
+
+export interface AnalysisConfig {
+  startRpm: number;
+  endRpm: number;
+  stepRpm: number;
+}
