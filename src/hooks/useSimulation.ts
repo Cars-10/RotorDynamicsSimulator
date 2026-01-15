@@ -119,8 +119,19 @@ export const useSimulation = () => {
       setIsDirty(true);
   }, []);
 
+  const updateRotorComponent = useCallback((id: string, updates: Partial<RotorComponent>) => {
+      setData(prev => {
+          const newRotors = prev.rotors.map(comp => 
+              comp.id === id ? { ...comp, ...updates } : comp
+          );
+          return { ...prev, rotors: newRotors };
+      });
+      setIsDirty(true);
+  }, []);
+
   return {
     addRotorComponent,
+    updateRotorComponent,
     data,
     setData,
     activeModeIndex,

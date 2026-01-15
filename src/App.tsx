@@ -11,6 +11,7 @@ import { exportSimulation, importSimulation } from './utils/fileStorage';
 import { MainLayout } from './components/layout/MainLayout';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
+import { ComponentPropertiesEditor } from './components/editors/ComponentPropertiesEditor';
 import { Button } from './components/ui/Button';
 import { Save, Upload, FileText, HelpCircle, PenTool } from 'lucide-react';
 
@@ -25,7 +26,8 @@ const App: React.FC = () => {
     setError,
     isDirty,
     generate: generateSimulation,
-    updateSegmentWithPhysics
+    updateSegmentWithPhysics,
+    updateRotorComponent
   } = useSimulation();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,6 +61,7 @@ const App: React.FC = () => {
   
   // Selection Sync State (Multi-select)
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
 
   // --- GAME LOGIC / HEALTH CHECK ---
   const systemHealth = useMemo(() => {
@@ -131,11 +134,27 @@ const App: React.FC = () => {
   };
 
   const toggleEdit = () => {
-      setIsEditing(!isEditing);
-      if (!isEditing) setSelectedIndices(new Set());
+      if (isEditing) {
+          setIsEditing(false);
+          setSelectedIndices(new Set());
+          setSelectedComponentId(null);
+      } else {
+          setIsEditing(true);
+      }
+  };
+
+  const handleSelectComponent = (id: string | null) => {
+      if (id) {
+          setSelectedComponentId(id);
+          setSelectedIndices(new Set());
+          setIsEditing(true);
+      } else {
+          setSelectedComponentId(null);
+      }
   };
 
   const handleSelectSegment = (index: number, multiSelect: boolean = false) => {
+      setSelectedComponentId(null);
       setSelectedIndices(prev => {
           const newSet = new Set(multiSelect ? prev : []);
           if (newSet.has(index)) {
@@ -150,6 +169,11 @@ const App: React.FC = () => {
           return newSet;
       });
   };
+
+  const selectedComponent = useMemo(() => 
+    data.rotors.find(r => r.id === selectedComponentId), 
+    [data.rotors, selectedComponentId]
+  );
 
   return (
     <MainLayout
@@ -221,14 +245,25 @@ const App: React.FC = () => {
       }
       showSidebar={isEditing}
       sidebar={
-          <Sidebar title="Shaft Editor" onClose={() => setIsEditing(false)}>
-              <ShaftEditor 
-                  segments={data.shaftSegments} 
-                  onUpdateSegment={updateSegmentWithPhysics} 
-                  onClose={() => setIsEditing(false)}
-                  selectedIndices={selectedIndices}
-                  onSelectSegment={handleSelectSegment}
-              />
+          <Sidebar 
+            title={selectedComponent ? "Component Properties" : "Shaft Editor"} 
+            onClose={toggleEdit}
+          >
+              {selectedComponent ? (
+                  <ComponentPropertiesEditor
+                      component={selectedComponent}
+                      onUpdate={(updates) => updateRotorComponent(selectedComponent.id, updates)}
+                      onClose={() => handleSelectComponent(null)}
+                  />
+              ) : (
+                  <ShaftEditor 
+                      segments={data.shaftSegments} 
+                      onUpdateSegment={updateSegmentWithPhysics} 
+                      onClose={toggleEdit}
+                      selectedIndices={selectedIndices}
+                      onSelectSegment={handleSelectSegment}
+                  />
+              )}
           </Sidebar>
       }
     >
@@ -298,6 +333,7 @@ const App: React.FC = () => {
                 selectedSegmentIndex={Array.from(selectedIndices)[0] ?? null}
                 selectedIndices={selectedIndices}
                 onSelectSegment={(idx) => handleSelectSegment(idx, false)}
+                onSelectComponent={handleSelectComponent}
                 systemHealth={systemHealth}
                 gameMode={gameMode}
             />

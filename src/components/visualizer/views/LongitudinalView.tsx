@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { SimulationData, ShaftSegment } from '../../../types';
 import { getDisplacementAt } from '../../../utils/visualizerUtils';
+import { getMaterialById } from '../../../constants/materials';
 
 interface LongitudinalViewProps {
   data: SimulationData;
@@ -12,6 +13,7 @@ interface LongitudinalViewProps {
   onUpdateSegment: (index: number, updates: Partial<ShaftSegment>) => void;
   selectedIndices: Set<number>;
   onSelectSegment: (index: number) => void;
+  onSelectComponent?: (id: string | null) => void;
   isOverlay?: boolean;
   isTripped?: boolean;
 }
@@ -26,6 +28,7 @@ export const LongitudinalView: React.FC<LongitudinalViewProps> = ({
     onUpdateSegment,
     selectedIndices,
     onSelectSegment,
+    onSelectComponent,
     isOverlay = false,
     isTripped = false
 }) => {
@@ -73,18 +76,20 @@ export const LongitudinalView: React.FC<LongitudinalViewProps> = ({
     };
 
     const chunks = [];
-    let currentChunk = [data.shaftSegments[0]];
-    for (let i = 1; i < data.shaftSegments.length; i++) {
-        const prev = data.shaftSegments[i-1];
-        const curr = data.shaftSegments[i];
-        if (curr.outerDiameter === prev.outerDiameter && curr.color === prev.color && !isEditing) {
-            currentChunk.push(curr);
-        } else {
-            chunks.push(currentChunk);
-            currentChunk = [curr];
+    if (data.shaftSegments.length > 0) {
+        let currentChunk = [data.shaftSegments[0]];
+        for (let i = 1; i < data.shaftSegments.length; i++) {
+            const prev = data.shaftSegments[i-1];
+            const curr = data.shaftSegments[i];
+            if (curr.outerDiameter === prev.outerDiameter && curr.materialId === prev.materialId && !isEditing) {
+                currentChunk.push(curr);
+            } else {
+                chunks.push(currentChunk);
+                currentChunk = [curr];
+            }
         }
+        chunks.push(currentChunk);
     }
-    chunks.push(currentChunk);
 
     return (
       <div 
@@ -101,13 +106,22 @@ export const LongitudinalView: React.FC<LongitudinalViewProps> = ({
         <svg viewBox={`0 0 ${viewWidth} ${viewHeight}`} className="w-full h-full block">
           <line x1={0} y1={centerY} x2={viewWidth} y2={centerY} stroke="#334155" strokeDasharray="4 4" />
 
-          {data.rotors.filter(r => r.type === 'bearing' || r.type === 'coupling').map((b, i) => {
+          {data.rotors.filter(r => r.type === 'bearing' || r.type === 'coupling' || r.type === 'seal').map((b, i) => {
              const x = paddingX + b.position * drawWidth;
              const w = Math.max(15, (b.width || 0.05) * drawWidth);
              const h = 50;
              const y = centerY + 30;
              return (
-                 <g key={`bearing-side-${i}`}>
+                 <g 
+                    key={`bearing-side-${i}`}
+                    onClick={(e) => { 
+                        if (isEditing && onSelectComponent) {
+                            e.stopPropagation(); 
+                            onSelectComponent(b.id); 
+                        }
+                    }}
+                    className={isEditing ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}
+                 >
                     <path d={`M ${x-w/2} ${y} L ${x+w/2} ${y} L ${x+w/2 + 5} ${y+h} L ${x-w/2 - 5} ${y+h} Z`} fill="url(#bearing-pattern)" stroke="#fbbf24" strokeWidth="0.5" />
                     <rect x={x-w/2} y={y+h} width={w+10} height={5} fill="#fbbf24" />
                     <text x={x} y={y + h + 15} textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="bold" letterSpacing="0.5px">
@@ -124,6 +138,7 @@ export const LongitudinalView: React.FC<LongitudinalViewProps> = ({
                  const r = seg.outerDiameter * 70; 
                  const y = centerY + disp * yScale * Math.cos(phase);
                  const selected = selectedIndices.has(seg.index);
+                 const color = getMaterialById(seg.materialId).color;
 
                  return (
                      <g 
@@ -133,7 +148,7 @@ export const LongitudinalView: React.FC<LongitudinalViewProps> = ({
                      >
                          <rect 
                              x={x} y={y - r/2} width={segmentWidth} height={r} 
-                             fill={seg.color}
+                             fill={color}
                              stroke={selected ? "#22d3ee" : "none"} strokeWidth={selected ? 1 : 0} opacity={selected ? 1 : 0.8}
                          />
                      </g>
@@ -159,9 +174,10 @@ export const LongitudinalView: React.FC<LongitudinalViewProps> = ({
                   pathD += ` L ${x + segmentWidth} ${y} L ${x} ${y}`;
                 }
                 pathD += " Z";
+                const color = getMaterialById(chunk[0].materialId).color;
                 return (
                   <g key={chunkIndex}>
-                      <path d={pathD} fill={chunk[0].color} stroke="none" />
+                      <path d={pathD} fill={color} stroke="none" />
                       <path d={pathD} fill="url(#metal-sheen-vert)" style={{ mixBlendMode: 'multiply' }} opacity="0.8" />
                       <path d={pathD} fill="url(#metal-sheen-vert)" style={{ mixBlendMode: 'screen' }} opacity="0.3" />
                   </g>

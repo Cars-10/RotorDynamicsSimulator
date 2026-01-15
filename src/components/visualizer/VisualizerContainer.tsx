@@ -17,6 +17,7 @@ interface VisualizerContainerProps {
   onUpdateSegment: (index: number, updates: Partial<ShaftSegment>) => void;
   selectedIndices: Set<number>;
   onSelectSegment: (index: number) => void;
+  onSelectComponent?: (id: string | null) => void;
   systemHealth: { status: 'safe' | 'warning' | 'danger', message: string, estimatedMils: number };
   gameMode: boolean;
   

@@ -39,4 +39,36 @@ describe('useSimulation', () => {
     expect(newRpm).toBeGreaterThan(initialRpm);
     expect(result.current.data.shaftSegments[0].outerDiameter).toBe(currentDia + 10);
   });
+
+  it('updates rotor component physics', () => {
+    const { result } = renderHook(() => useSimulation());
+    
+    // Add a component to test with
+    act(() => {
+        result.current.addRotorComponent({
+            name: "Test Bearing",
+            type: "bearing",
+            position: 0.5
+        });
+    });
+
+    const newComp = result.current.data.rotors.find(r => r.name === "Test Bearing");
+    expect(newComp).toBeDefined();
+    if (!newComp) return;
+
+    // Update physics
+    const newKxx = { constant: 999 };
+    act(() => {
+        result.current.updateRotorComponent(newComp.id, {
+            physics: {
+                ...newComp.physics!,
+                kxx: newKxx
+            }
+        });
+    });
+
+    const updatedComp = result.current.data.rotors.find(r => r.id === newComp.id);
+    expect(updatedComp?.physics?.kxx.constant).toBe(999);
+    expect(result.current.isDirty).toBe(true);
+  });
 });
