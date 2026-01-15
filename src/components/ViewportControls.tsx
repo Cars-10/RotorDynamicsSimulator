@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { ModeShape, ViewType } from '../types';
+import { Save, Upload, FileText, HelpCircle, PenTool, Activity } from 'lucide-react';
+import { Button } from './ui/Button';
 
 interface ControlsProps {
   modes: ModeShape[];
@@ -36,6 +38,9 @@ interface ControlsProps {
   isDirty: boolean;
   onSave: () => void;
   onLoad: (file: File) => void;
+  
+  // Optional: App Mode toggle if needed here, or handle externally.
+  // We'll stick to the original set for now.
 }
 
 const Controls: React.FC<ControlsProps> = ({ 
@@ -54,14 +59,34 @@ const Controls: React.FC<ControlsProps> = ({
   onAmplitudeChange, 
   damping, 
   onDampingChange,
+  isEditing, 
+  onToggleEdit,
+  onShowReport,
+  onToggleTutorial,
+  machineType,
+  setMachineType,
+  gridFreq,
+  setGridFreq,
+  operatingRpm,
   gameMode,
   setGameMode,
   systemHealth,
   gameLives,
   isDirty,
+  onSave,
+  onLoad
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        onLoad(e.target.files[0]);
+    }
+    if (e.target) e.target.value = '';
+  };
+
   return (
-    <div className="w-full bg-surface/50 border-b border-border p-2 flex flex-col xl:flex-row items-center justify-between gap-3 shadow-sm select-none backdrop-blur-sm z-20">
+    <div className="w-full bg-panel/90 border-b border-border p-2 flex flex-col xl:flex-row items-center justify-between gap-3 shadow-md select-none backdrop-blur-md sticky top-0 z-50">
       <style>{`
         .range-sm::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -84,8 +109,24 @@ const Controls: React.FC<ControlsProps> = ({
         }
       `}</style>
 
-      {/* CENTER GROUP: Game Status or Sliders */}
-      <div className="flex items-center gap-4 flex-wrap justify-start flex-1">
+      {/* LEFT GROUP: Branding */}
+      <div className="flex items-center gap-3 shrink-0">
+         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20 relative overflow-hidden shrink-0">
+             <svg viewBox="0 0 100 100" className="w-full h-full p-[2px]">
+                <path d="M15 25 L35 75 L50 35 L65 75 L85 25" fill="none" stroke="black" strokeWidth="6" strokeLinecap="square" strokeLinejoin="miter" />
+                <circle cx="15" cy="25" r="5" fill="black" />
+                <circle cx="50" cy="35" r="5" fill="black" />
+                <circle cx="85" cy="25" r="5" fill="black" />
+                <rect x="25" y="82" width="50" height="6" fill="black" rx="2" />
+             </svg>
+         </div>
+         <div className="leading-tight hidden sm:block">
+            <h1 className="text-text-primary font-bold text-sm tracking-tight">RotorDynamics <span className="text-primary font-light">Sim</span></h1>
+         </div>
+      </div>
+
+      {/* CENTER GROUP: View & Game Status */}
+      <div className="flex items-center gap-4 flex-wrap justify-center flex-1">
         
         {/* Game Mode Status Panel */}
         {gameMode ? (
@@ -133,7 +174,7 @@ const Controls: React.FC<ControlsProps> = ({
             </div>
         ) : (
             <>
-                <div className="flex bg-panel p-0.5 rounded-md border border-border shrink-0">
+                <div className="flex bg-surface p-0.5 rounded-md border border-border shrink-0">
                     {[ViewType.ISOMETRIC, ViewType.RADIAL, ViewType.LONGITUDINAL, ViewType.ALL].map((v) => (
                         <button
                             key={v}
@@ -141,8 +182,8 @@ const Controls: React.FC<ControlsProps> = ({
                             title={`Switch to ${v} View`}
                             className={`px-2 py-1 rounded text-[9px] font-bold tracking-wider transition-all ${
                                 viewMode === v
-                                ? 'bg-surface text-text-primary shadow-sm'
-                                : 'text-text-muted hover:text-text-primary hover:bg-surface/50'
+                                ? 'bg-panel text-primary shadow-sm ring-1 ring-border'
+                                : 'text-text-muted hover:text-text-primary hover:bg-panel/50'
                             }`}
                         >
                             {v === ViewType.ALL ? 'COMPOSITE' : v.toUpperCase().substring(0, 4)}
@@ -155,7 +196,7 @@ const Controls: React.FC<ControlsProps> = ({
                     value={activeModeIndex} 
                     onChange={(e) => onSelectMode(Number(e.target.value))}
                     title="Select a Critical Speed or Operating Mode to visualize its shape."
-                    className="bg-panel text-primary border border-border rounded text-xs font-mono font-bold px-2 py-1 max-w-[120px] focus:ring-1 focus:ring-primary cursor-pointer"
+                    className="bg-surface text-primary border border-border rounded text-xs font-mono font-bold px-2 py-1 max-w-[120px] focus:ring-1 focus:ring-primary cursor-pointer"
                 >
                     {modes.map((m, i) => (
                         <option key={m.order} value={i}>
@@ -193,16 +234,77 @@ const Controls: React.FC<ControlsProps> = ({
         )}
       </div>
 
-      {/* RIGHT GROUP: Remaining Viewport Actions */}
-      <div className="flex items-center gap-2 border-l border-border pl-3">
+      {/* RIGHT GROUP: Actions & Machine Config */}
+      <div className="flex items-center gap-2 border-l border-border pl-3 shrink-0">
         
+        {/* Machine Configuration */}
+        <div className="flex flex-col gap-0.5 mr-2">
+            <select 
+                value={machineType} 
+                onChange={(e) => setMachineType(e.target.value as 'hydrogen' | 'nuclear')}
+                className="bg-transparent border-none rounded px-0 py-0 text-[10px] text-text-secondary focus:ring-0 cursor-pointer hover:text-text-primary text-right"
+            >
+                <option value="hydrogen">H2 Cooled (2-Pole)</option>
+                <option value="nuclear">Nuclear (4-Pole)</option>
+            </select>
+             <div className="flex justify-end items-center gap-2">
+                 <span className="text-[10px] font-mono text-primary font-bold">{operatingRpm} RPM</span>
+                 <select 
+                    value={gridFreq}
+                    onChange={(e) => setGridFreq(parseInt(e.target.value) as any)}
+                    className="bg-transparent border-none rounded px-0 py-0 text-[10px] text-text-muted focus:ring-0 cursor-pointer hover:text-text-primary text-right"
+                >
+                    <option value="60">60Hz</option>
+                    <option value="50">50Hz</option>
+                </select>
+             </div>
+        </div>
+        
+        <div className="w-px h-8 bg-border mx-1"></div>
+
+        {/* Buttons */}
+        <Button variant="ghost" size="sm" onClick={onSave} title="Save Simulation">
+            <Save className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} title="Load Simulation">
+            <Upload className="h-4 w-4" />
+        </Button>
+        <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept=".json" 
+            style={{ display: 'none' }} 
+        />
+        
+        <Button 
+            variant={onShowReport ? 'ghost' : 'ghost'} // Keeping ghost for standard look
+            size="sm" 
+            onClick={onShowReport} 
+            title="Analysis Report"
+        >
+            <FileText className="h-4 w-4" />
+        </Button>
+
+        <Button 
+            variant={isEditing ? 'primary' : 'ghost'} 
+            size="sm" 
+            onClick={onToggleEdit}
+            title="Shaft Editor"
+            className={isEditing ? "bg-primary text-primary-foreground" : ""}
+        >
+            <PenTool className="h-4 w-4" />
+        </Button>
+
+        <div className="w-px h-8 bg-border mx-1"></div>
+
         <button
             onClick={onToggleTrace}
-            title="Toggle Trace: Visualize the motion path of the shaft centerline."
+            title="Toggle Trace"
             className={`px-3 py-1.5 rounded text-[10px] font-bold border transition-all ${
                 showTrace 
                 ? 'bg-primary/10 text-primary border-primary/30' 
-                : 'bg-panel text-text-muted border-border hover:text-text-primary'
+                : 'bg-surface text-text-muted border-border hover:text-text-primary'
             }`}
         >
             TRACE
@@ -210,11 +312,11 @@ const Controls: React.FC<ControlsProps> = ({
 
         <button
             onClick={() => setGameMode(!gameMode)}
-            title={gameMode ? "Exit Game Mode" : "Enter Game Mode: Tune the rotor to avoid critical speeds within 5 tries."}
+            title={gameMode ? "Exit Game Mode" : "Enter Game Mode"}
             className={`flex items-center gap-1 px-3 py-1.5 rounded text-[10px] font-bold border transition-all ${
                 gameMode 
                 ? 'bg-accent/20 border-accent/50 text-accent shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
-                : 'bg-panel border-border text-text-muted hover:text-accent hover:border-accent/30'
+                : 'bg-surface border-border text-text-muted hover:text-accent hover:border-accent/30'
             }`}
         >
             {gameMode ? 'TUNING' : 'GAME'}
@@ -223,12 +325,12 @@ const Controls: React.FC<ControlsProps> = ({
         <button
             onClick={onGenerate}
             disabled={isGenerating || (gameMode && gameLives <= 0)}
-            title="Run Simulation: Generates new rotor data using AI. Consumes 1 'Life' in Game Mode."
+            title="Run Simulation"
             className={`px-3 py-1.5 rounded text-[10px] font-bold border transition-all flex items-center gap-1 ${
-                (gameMode && gameLives <= 0) ? 'bg-panel text-text-muted border-border cursor-not-allowed' :
+                (gameMode && gameLives <= 0) ? 'bg-surface text-text-muted border-border cursor-not-allowed' :
                 isDirty 
                 ? 'bg-warning/80 text-black border-warning animate-pulse' 
-                : 'bg-panel text-primary border-primary/30 hover:bg-surface'
+                : 'bg-surface text-primary border-primary/30 hover:bg-surface/80'
             }`}
         >
             {isGenerating ? '...' : isDirty ? 'CALC' : 'RUN'}
@@ -249,6 +351,10 @@ const Controls: React.FC<ControlsProps> = ({
              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
            )}
         </button>
+        
+        <Button variant="ghost" size="sm" onClick={onToggleTutorial} title="Tutorial">
+             <HelpCircle className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

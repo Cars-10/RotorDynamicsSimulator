@@ -9,7 +9,6 @@ import BearingAnalyst from './components/BearingAnalyst';
 import { useSimulation } from './hooks/useSimulation';
 import { exportSimulation, importSimulation } from './utils/fileStorage';
 import { MainLayout } from './components/layout/MainLayout';
-import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { ComponentPropertiesEditor } from './components/editors/ComponentPropertiesEditor';
 import { Button } from './components/ui/Button';
@@ -181,82 +180,39 @@ const App: React.FC = () => {
   return (
     <MainLayout
       header={
-        <Header>
-           <div className="flex items-center gap-3">
-              <div className="flex flex-col border-r border-border pr-4 mr-2">
-                  <select 
-                      value={machineType} 
-                      onChange={(e) => setMachineType(e.target.value as any)}
-                      className="bg-transparent text-[10px] text-text-secondary focus:outline-none cursor-pointer hover:text-text-primary"
-                  >
-                      <option value="hydrogen">H2 Cooled (2-Pole)</option>
-                      <option value="nuclear">Nuclear (4-Pole)</option>
-                  </select>
-                  <div className="flex justify-between items-center w-full gap-2">
-                       <span className="text-[10px] font-mono text-primary font-bold">{operatingRpm} RPM</span>
-                       <select 
-                          value={gridFreq}
-                          onChange={(e) => setGridFreq(parseInt(e.target.value) as any)}
-                          className="bg-transparent text-[10px] text-text-muted focus:outline-none cursor-pointer hover:text-text-primary"
-                      >
-                          <option value="60">60Hz</option>
-                          <option value="50">50Hz</option>
-                      </select>
-                  </div>
-              </div>
-              
-              <Button variant="ghost" size="sm" onClick={handleSave} title="Save Simulation">
-                  <Save className="h-4 w-4" />
-              </Button>
-               <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} title="Load Simulation">
-                  <Upload className="h-4 w-4" />
-              </Button>
-              <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  accept=".json" 
-                  style={{ display: 'none' }} 
-              />
-
-              <div className="w-px h-6 bg-border mx-1" />
-
-              <Button 
-                variant={showReport ? 'primary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setShowReport(!showReport)} 
-                title="Analysis Report"
-                className={showReport ? "bg-primary/10 text-primary" : ""}
-              >
-                  <FileText className="h-4 w-4" />
-              </Button>
-
-              <Button 
-                variant={appMode === 'analysis' ? 'primary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setAppMode(appMode === 'analysis' ? 'design' : 'analysis')} 
-                title="Advanced Analysis"
-                className={appMode === 'analysis' ? "bg-primary/10 text-primary" : ""}
-              >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Analysis
-              </Button>
-
-               <Button variant="ghost" size="sm" onClick={() => setShowTutorial(true)} title="Tutorial">
-                  <HelpCircle className="h-4 w-4" />
-              </Button>
-               <Button 
-                  variant={isEditing ? 'primary' : 'ghost'} 
-                  size="sm" 
-                  onClick={toggleEdit}
-                  title="Toggle Shaft Editor"
-                  className={isEditing ? "bg-primary text-primary-foreground" : ""}
-              >
-                  <PenTool className="h-4 w-4 mr-2" />
-                  Editor
-              </Button>
-           </div>
-        </Header>
+          <ViewportControls 
+            modes={data.modes}
+            activeModeIndex={activeModeIndex}
+            onSelectMode={setActiveModeIndex}
+            onGenerate={handleGenerate}
+            isGenerating={isGenerating}
+            isPlaying={isPlaying}
+            onTogglePlay={() => setIsPlaying(!isPlaying)}
+            viewMode={viewMode}
+            onViewChange={setViewMode}
+            showTrace={showTrace}
+            onToggleTrace={() => setShowTrace(!showTrace)}
+            amplitudeScale={amplitudeScale}
+            onAmplitudeChange={setAmplitudeScale}
+            damping={damping}
+            onDampingChange={setDamping}
+            isEditing={isEditing}
+            onToggleEdit={toggleEdit}
+            onShowReport={() => setShowReport(!showReport)}
+            onToggleTutorial={() => setShowTutorial(true)}
+            machineType={machineType}
+            setMachineType={setMachineType}
+            gridFreq={gridFreq}
+            setGridFreq={setGridFreq}
+            operatingRpm={operatingRpm}
+            gameMode={gameMode}
+            setGameMode={setGameMode}
+            systemHealth={systemHealth}
+            gameLives={gameLives}
+            isDirty={isDirty}
+            onSave={handleSave}
+            onLoad={handleLoad}
+          />
       }
       showSidebar={isEditing}
       sidebar={
@@ -282,40 +238,6 @@ const App: React.FC = () => {
           </Sidebar>
       }
     >
-      <ViewportControls 
-        modes={data.modes}
-        activeModeIndex={activeModeIndex}
-        onSelectMode={setActiveModeIndex}
-        onGenerate={handleGenerate}
-        isGenerating={isGenerating}
-        isPlaying={isPlaying}
-        onTogglePlay={() => setIsPlaying(!isPlaying)}
-        viewMode={viewMode}
-        onViewChange={setViewMode}
-        showTrace={showTrace}
-        onToggleTrace={() => setShowTrace(!showTrace)}
-        amplitudeScale={amplitudeScale}
-        onAmplitudeChange={setAmplitudeScale}
-        damping={damping}
-        onDampingChange={setDamping}
-        isEditing={isEditing}
-        onToggleEdit={toggleEdit}
-        onShowReport={() => setShowReport(!showReport)}
-        onToggleTutorial={() => setShowTutorial(true)}
-        machineType={machineType}
-        setMachineType={setMachineType}
-        gridFreq={gridFreq}
-        setGridFreq={setGridFreq}
-        operatingRpm={operatingRpm}
-        gameMode={gameMode}
-        setGameMode={setGameMode}
-        systemHealth={systemHealth}
-        gameLives={gameLives}
-        isDirty={isDirty}
-        onSave={handleSave}
-        onLoad={handleLoad}
-      />
-
       <div className="flex-1 relative h-full">
             {error && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-danger/90 text-white px-6 py-3 rounded shadow-xl z-50 flex items-center gap-2">
