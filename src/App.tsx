@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { ViewType } from './types';
 import RotorVisualizer from './components/RotorVisualizer';
-import Controls from './components/Controls';
+import ViewportControls from './components/ViewportControls';
 import ShaftEditor from './components/ShaftEditor';
 import AnalysisTable from './components/AnalysisTable';
 import Tutorial from './components/Tutorial';
@@ -232,7 +232,7 @@ const App: React.FC = () => {
           </Sidebar>
       }
     >
-      <Controls 
+      <ViewportControls 
         modes={data.modes}
         activeModeIndex={activeModeIndex}
         onSelectMode={setActiveModeIndex}
