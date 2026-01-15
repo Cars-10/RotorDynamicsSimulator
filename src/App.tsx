@@ -16,6 +16,7 @@ import { Save, Upload, FileText, HelpCircle, PenTool, Activity } from 'lucide-re
 import { AnalysisDashboard } from './components/analysis/AnalysisDashboard';
 
 const App: React.FC = () => {
+  console.log("RotorDynamics UI v5.0 Loaded - Deep Blue Theme");
   const {
     data,
     setData,
