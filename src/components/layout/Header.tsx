@@ -6,7 +6,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ children }) => {
   return (
-    <header className="h-14 bg-panel border-b border-border flex items-center justify-between px-4">
+    <header className="h-14 bg-panel/90 backdrop-blur-md border-b border-border flex items-center justify-between px-4">
       <div className="flex items-center gap-3 select-none">
          {/* Branding SVG */}
          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20 relative overflow-hidden shrink-0">

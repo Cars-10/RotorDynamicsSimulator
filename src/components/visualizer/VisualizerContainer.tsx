@@ -48,7 +48,7 @@ export const VisualizerContainer: React.FC<VisualizerContainerProps> = (props) =
 
     if (props.viewMode === ViewType.ALL) {
         return (
-            <div className="relative w-full h-full bg-canvas overflow-hidden bg-[image:radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]">
+            <div className="relative w-full h-full bg-canvas overflow-hidden bg-[image:radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]">
                 <SvgDefs />
                 <div className="absolute inset-0 z-0">
                     <IsometricView {...viewProps} />

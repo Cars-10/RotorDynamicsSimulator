@@ -69,7 +69,7 @@ const Controls: React.FC<ControlsProps> = ({
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: white;
+            background: #06b6d4;
             cursor: pointer;
             box-shadow: 0 0 2px rgba(0,0,0,0.5);
         }
@@ -77,7 +77,7 @@ const Controls: React.FC<ControlsProps> = ({
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: white;
+            background: #06b6d4;
             cursor: pointer;
             border: none;
             box-shadow: 0 0 2px rgba(0,0,0,0.5);
