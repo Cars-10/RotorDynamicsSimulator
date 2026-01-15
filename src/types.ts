@@ -27,7 +27,7 @@ export interface StiffnessDampingMatrix {
 export interface RotorComponent {
   id: string;
   name: string;
-  type: 'bearing' | 'disc' | 'shaft' | 'coupling';
+  type: 'bearing' | 'disc' | 'shaft' | 'coupling' | 'seal';
   position: number; // Normalized position 0-1 along the shaft
   width?: number; // Visual width
   diameter?: number; // Visual diameter

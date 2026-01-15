@@ -1,10 +1,33 @@
-import { useState, useCallback } from 'react';
-import { SimulationData, ShaftSegment } from '../types';
+import { useState, useCallback, useEffect } from 'react';
+import { SimulationData, ShaftSegment, RotorComponent } from '../types';
 import { generateRotorData } from '../services/geminiService';
 import { DEFAULT_ROTOR_DATA } from '../constants';
+import { DEFAULT_MATERIAL_ID } from '../constants/materials';
 
 export const useSimulation = () => {
   const [data, setData] = useState<SimulationData>(DEFAULT_ROTOR_DATA);
+  
+  // Migration logic for old data (e.g. from localStorage or older versions)
+  useEffect(() => {
+    setData(prev => {
+      let needsMigration = false;
+      const migratedSegments = prev.shaftSegments.map(seg => {
+        if (!(seg as any).materialId && (seg as any).color) {
+          needsMigration = true;
+          // Simple heuristic: map common colors to materials
+          let materialId = DEFAULT_MATERIAL_ID;
+          if ((seg as any).color === '#ef4444') materialId = 'titanium';
+          return { ...seg, materialId };
+        }
+        return seg;
+      });
+
+      if (needsMigration) {
+        return { ...prev, shaftSegments: migratedSegments };
+      }
+      return prev;
+    });
+  }, []);
   const [activeModeIndex, setActiveModeIndex] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +93,34 @@ export const useSimulation = () => {
       setIsDirty(true);
   }, []);
 
+  const addRotorComponent = useCallback((component: Omit<RotorComponent, 'id'>) => {
+      setData(prev => {
+          const id = Math.random().toString(36).substr(2, 9);
+          const newComp: RotorComponent = { ...component, id };
+          
+          if ((newComp.type === 'bearing' || newComp.type === 'seal') && !newComp.physics) {
+             newComp.physics = {
+                kxx: { constant: 1e8 },
+                kyy: { constant: 1e8 },
+                kxy: { constant: 0 },
+                kyx: { constant: 0 },
+                cxx: { constant: 1e5 },
+                cyy: { constant: 1e5 },
+                cxy: { constant: 0 },
+                cyx: { constant: 0 }
+             };
+          }
+          
+          return {
+              ...prev,
+              rotors: [...prev.rotors, newComp]
+          };
+      });
+      setIsDirty(true);
+  }, []);
+
   return {
+    addRotorComponent,
     data,
     setData,
     activeModeIndex,

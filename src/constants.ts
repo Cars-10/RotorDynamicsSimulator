@@ -1,17 +1,6 @@
 import { SimulationData, ShaftSegment } from './types';
 
-export const MATERIAL_COLORS = [
-    '#cbd5e1', // Steel (Slate 300)
-    '#94a3b8', // Darker Steel (Slate 400)
-    '#ef4444', // Red (Exciter/Hot)
-    '#f59e0b', // Amber (Brass/Bearing)
-    '#3b82f6', // Blue (Generator)
-    '#10b981', // Emerald (LP)
-    '#8b5cf6', // Violet (HP)
-    '#f472b6', // Pink (Experimental)
-    '#0f172a', // Black/Carbon
-    '#e2e8f0', // Aluminum
-];
+import { DEFAULT_MATERIAL_ID } from './constants/materials';
 
 // Helper to generate realistic shaft profile
 const generateDefaultShaft = (): ShaftSegment[] => {
@@ -21,71 +10,71 @@ const generateDefaultShaft = (): ShaftSegment[] => {
   for (let i = 0; i < COUNT; i++) {
     const pos = i / COUNT;
     let diameter = 0.2; // Base shaft
-    let color = '#cbd5e1'; // Slate-300 (Steel)
+    let materialId = DEFAULT_MATERIAL_ID;
     let label = undefined;
 
     // Exciter (0.0 - 0.1)
     if (pos < 0.1) {
       diameter = 0.45;
-      color = '#ef4444';
+      materialId = 'titanium'; // Use titanium for exciter as an example
       if (i === 5) label = "Exciter Core";
     } 
     // Bearing 1 (0.1 - 0.12)
     else if (pos < 0.12) {
       diameter = 0.25;
-      color = '#f59e0b';
+      materialId = 'steel';
     }
     // Generator Main Body (0.12 - 0.45) - Massive
     else if (pos < 0.45) {
       diameter = 0.95;
-      color = '#3b82f6';
+      materialId = 'steel';
       if (i === 28) label = "Rotor Body";
     }
     // Bearing 2 / Coupling (0.45 - 0.50)
     else if (pos < 0.50) {
       diameter = 0.25;
-      color = '#f59e0b';
+      materialId = 'steel';
     }
     // LP Turbine (0.50 - 0.75) - Discs and spacers
     else if (pos < 0.75) {
       // Create disc pattern every few segments
       if (i % 5 === 0 || i % 5 === 1) {
          diameter = 1.0; // Blade disc
-         color = '#10b981';
+         materialId = 'steel';
       } else {
          diameter = 0.4; // Shaft between discs
-         color = '#64748b';
+         materialId = 'steel';
       }
       if (i === 62) label = "L-0 Stage";
     }
     // Bearing 3 / Coupling (0.75 - 0.80)
     else if (pos < 0.80) {
       diameter = 0.25;
-      color = '#f59e0b';
+      materialId = 'steel';
     }
     // HP Turbine (0.80 - 0.95) - Dense stepping
     else if (pos < 0.95) {
        // Stepped rotor
        if (i % 3 === 0) {
          diameter = 0.8;
-         color = '#8b5cf6';
+         materialId = 'steel';
        } else {
          diameter = 0.6;
-         color = '#7c3aed';
+         materialId = 'steel';
        }
        if (i === 87) label = "HP Inlet";
     }
     // Bearing 4 (0.95 - 1.0)
     else {
       diameter = 0.25;
-      color = '#f59e0b';
+      materialId = 'steel';
     }
 
     segments.push({
       index: i,
       length: 1 / COUNT,
       outerDiameter: diameter,
-      color: color,
+      materialId: materialId,
       label: label
     });
   }
@@ -95,10 +84,82 @@ const generateDefaultShaft = (): ShaftSegment[] => {
 export const DEFAULT_ROTOR_DATA: SimulationData = {
   // We keep high-level components for labeling if needed, but rendering uses shaftSegments
   rotors: [
-    { id: 'brg1', name: 'Bearing #1', type: 'bearing', position: 0.11, width: 0.05, diameter: 0.25, color: '#f59e0b' },
-    { id: 'brg2', name: 'Bearing #2', type: 'bearing', position: 0.48, width: 0.05, diameter: 0.25, color: '#f59e0b' },
-    { id: 'brg3', name: 'Bearing #3', type: 'bearing', position: 0.78, width: 0.05, diameter: 0.25, color: '#f59e0b' },
-    { id: 'brg4', name: 'Bearing #4', type: 'bearing', position: 0.98, width: 0.05, diameter: 0.25, color: '#f59e0b' },
+    { 
+      id: 'brg1', 
+      name: 'Bearing #1', 
+      type: 'bearing', 
+      position: 0.11, 
+      width: 0.05, 
+      diameter: 0.25, 
+      color: '#f59e0b',
+      physics: {
+        kxx: { constant: 1e8 },
+        kyy: { constant: 1e8 },
+        kxy: { constant: 0 },
+        kyx: { constant: 0 },
+        cxx: { constant: 1e5 },
+        cyy: { constant: 1e5 },
+        cxy: { constant: 0 },
+        cyx: { constant: 0 }
+      }
+    },
+    { 
+      id: 'brg2', 
+      name: 'Bearing #2', 
+      type: 'bearing', 
+      position: 0.48, 
+      width: 0.05, 
+      diameter: 0.25, 
+      color: '#f59e0b',
+      physics: {
+        kxx: { constant: 1e8 },
+        kyy: { constant: 1e8 },
+        kxy: { constant: 0 },
+        kyx: { constant: 0 },
+        cxx: { constant: 1e5 },
+        cyy: { constant: 1e5 },
+        cxy: { constant: 0 },
+        cyx: { constant: 0 }
+      } 
+    },
+    { 
+      id: 'brg3', 
+      name: 'Bearing #3', 
+      type: 'bearing', 
+      position: 0.78, 
+      width: 0.05, 
+      diameter: 0.25, 
+      color: '#f59e0b',
+      physics: {
+        kxx: { constant: 1e8 },
+        kyy: { constant: 1e8 },
+        kxy: { constant: 0 },
+        kyx: { constant: 0 },
+        cxx: { constant: 1e5 },
+        cyy: { constant: 1e5 },
+        cxy: { constant: 0 },
+        cyx: { constant: 0 }
+      } 
+    },
+    { 
+      id: 'brg4', 
+      name: 'Bearing #4', 
+      type: 'bearing', 
+      position: 0.98, 
+      width: 0.05, 
+      diameter: 0.25, 
+      color: '#f59e0b',
+      physics: {
+        kxx: { constant: 1e8 },
+        kyy: { constant: 1e8 },
+        kxy: { constant: 0 },
+        kyx: { constant: 0 },
+        cxx: { constant: 1e5 },
+        cyy: { constant: 1e5 },
+        cxy: { constant: 0 },
+        cyx: { constant: 0 }
+      } 
+    },
   ],
   shaftSegments: generateDefaultShaft(),
   modes: [
