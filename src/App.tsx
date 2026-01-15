@@ -7,10 +7,12 @@ import AnalysisTable from './components/AnalysisTable';
 import Tutorial from './components/Tutorial';
 import BearingAnalyst from './components/BearingAnalyst';
 import { useSimulation } from './hooks/useSimulation';
+import { exportSimulation, importSimulation } from './utils/fileStorage';
 
 const App: React.FC = () => {
   const {
     data,
+    setData,
     activeModeIndex,
     setActiveModeIndex,
     isGenerating,
@@ -98,6 +100,22 @@ const App: React.FC = () => {
     }
   }, [gameMode, gameLives, generateSimulation]);
 
+  const handleSave = () => {
+    exportSimulation(data);
+  };
+
+  const handleLoad = async (file: File) => {
+    try {
+      const loadedData = await importSimulation(file);
+      setData(loadedData);
+      setActiveModeIndex(0);
+      setError(null);
+    } catch (e) {
+      console.error(e);
+      setError("Failed to load simulation file.");
+    }
+  };
+
   const toggleEdit = () => {
       setIsEditing(!isEditing);
       if (!isEditing) setSelectedIndices(new Set());
@@ -151,6 +169,8 @@ const App: React.FC = () => {
         systemHealth={systemHealth}
         gameLives={gameLives}
         isDirty={isDirty}
+        onSave={handleSave}
+        onLoad={handleLoad}
       />
 
       {/* Main Layout: Sidebar (if editing) + Visualizer Area */}
