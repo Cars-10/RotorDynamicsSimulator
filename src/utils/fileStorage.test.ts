@@ -15,7 +15,9 @@ describe('fileStorage', () => {
     global.URL.createObjectURL = createObjectURL;
     global.URL.revokeObjectURL = vi.fn();
     
-    const link = { click: vi.fn(), style: {} } as any;
+    const link = document.createElement('a');
+    vi.spyOn(link, 'click');
+    
     const createElement = vi.spyOn(document, 'createElement').mockReturnValue(link);
     const appendChild = vi.spyOn(document.body, 'appendChild');
     const removeChild = vi.spyOn(document.body, 'removeChild');
