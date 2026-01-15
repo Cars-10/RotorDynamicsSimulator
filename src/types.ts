@@ -1,3 +1,29 @@
+export interface Material {
+  id: string;
+  name: string;
+  density: number; // kg/m^3
+  youngsModulus: number; // Pa
+  color: string; // Display color
+  description?: string;
+}
+
+export interface SpeedDependentCoefficients {
+  constant: number;
+  linear?: number;
+  quadratic?: number;
+}
+
+export interface StiffnessDampingMatrix {
+  kxx: SpeedDependentCoefficients;
+  kxy: SpeedDependentCoefficients;
+  kyx: SpeedDependentCoefficients;
+  kyy: SpeedDependentCoefficients;
+  cxx: SpeedDependentCoefficients;
+  cxy: SpeedDependentCoefficients;
+  cyx: SpeedDependentCoefficients;
+  cyy: SpeedDependentCoefficients;
+}
+
 export interface RotorComponent {
   id: string;
   name: string;
@@ -6,13 +32,14 @@ export interface RotorComponent {
   width?: number; // Visual width
   diameter?: number; // Visual diameter
   color?: string;
+  physics?: StiffnessDampingMatrix;
 }
 
 export interface ShaftSegment {
   index: number;
   length: number; // normalized (usually 0.01 for 100 segments)
   outerDiameter: number; // normalized relative to max
-  color: string;
+  materialId: string;
   label?: string; // User defined marker/annotation
 }
 
