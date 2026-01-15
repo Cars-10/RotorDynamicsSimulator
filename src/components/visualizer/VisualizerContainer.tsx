@@ -20,6 +20,7 @@ interface VisualizerContainerProps {
   onSelectComponent?: (id: string | null) => void;
   systemHealth: { status: 'safe' | 'warning' | 'danger', message: string, estimatedMils: number };
   gameMode: boolean;
+  renderMode?: 'line' | '3d';
   
   // Legacy props shim
   selectedSegmentIndex?: number | null; 
@@ -49,9 +50,9 @@ export const VisualizerContainer: React.FC<VisualizerContainerProps> = (props) =
     if (props.viewMode === ViewType.ALL) {
         return (
             <div className="relative w-full h-full bg-canvas overflow-hidden bg-[image:radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]">
-                <SvgDefs />
+                <svg width="0" height="0" className="absolute"><SvgDefs /></svg>
                 <div className="absolute inset-0 z-0">
-                    <IsometricView {...viewProps} />
+                    <IsometricView {...viewProps} renderMode={props.renderMode} />
                 </div>
                 <div className="absolute top-4 left-4 w-96 h-96 z-10 shadow-2xl shadow-black/80 rounded-lg transition-opacity hover:opacity-100 opacity-95">
                     <RadialView {...viewProps} isOverlay />
@@ -65,8 +66,8 @@ export const VisualizerContainer: React.FC<VisualizerContainerProps> = (props) =
 
     return (
         <div className="w-full h-full relative bg-canvas bg-[image:radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]">
-            <SvgDefs />
-            {props.viewMode === ViewType.ISOMETRIC && <IsometricView {...viewProps} />}
+            <svg width="0" height="0" className="absolute"><SvgDefs /></svg>
+            {props.viewMode === ViewType.ISOMETRIC && <IsometricView {...viewProps} renderMode={props.renderMode} />}
             {props.viewMode === ViewType.RADIAL && <RadialView {...viewProps} />}
             {props.viewMode === ViewType.LONGITUDINAL && <LongitudinalView {...viewProps} />}
         </div>

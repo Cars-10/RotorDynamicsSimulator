@@ -34,6 +34,7 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [appMode, setAppMode] = useState<'design' | 'analysis'>('design');
+  const [renderMode, setRenderMode] = useState<'line' | '3d'>('3d');
 
   // Start in Composite View (ALL) as requested
   const [viewMode, setViewMode] = useState<ViewType>(ViewType.ALL);
@@ -213,6 +214,10 @@ const App: React.FC = () => {
             isDirty={isDirty}
             onSave={handleSave}
             onLoad={handleLoad}
+            appMode={appMode}
+            setAppMode={setAppMode}
+            renderMode={renderMode}
+            setRenderMode={setRenderMode}
           />
       }
       showSidebar={isEditing}
@@ -278,6 +283,7 @@ const App: React.FC = () => {
                         onSelectComponent={handleSelectComponent}
                         systemHealth={systemHealth}
                         gameMode={gameMode}
+                        renderMode={renderMode}
                     />
 
                     <BearingAnalyst 

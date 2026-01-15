@@ -39,8 +39,11 @@ interface ControlsProps {
   onSave: () => void;
   onLoad: (file: File) => void;
   
-  // Optional: App Mode toggle if needed here, or handle externally.
-  // We'll stick to the original set for now.
+  appMode: 'design' | 'analysis';
+  setAppMode: (mode: 'design' | 'analysis') => void;
+
+  renderMode: 'line' | '3d';
+  setRenderMode: (mode: 'line' | '3d') => void;
 }
 
 const Controls: React.FC<ControlsProps> = ({ 
@@ -74,7 +77,11 @@ const Controls: React.FC<ControlsProps> = ({
   gameLives,
   isDirty,
   onSave,
-  onLoad
+  onLoad,
+  appMode,
+  setAppMode,
+  renderMode,
+  setRenderMode
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -130,22 +137,73 @@ const Controls: React.FC<ControlsProps> = ({
          </div>
       </div>
 
+      {/* 1.5. APP MODE TOGGLE */}
+      <div className="flex bg-surface p-0.5 rounded-md border border-border shrink-0 mr-2">
+            <button
+                onClick={() => setAppMode('design')}
+                className={`px-3 py-1 rounded text-[10px] font-bold tracking-wider transition-all ${
+                    appMode === 'design'
+                    ? 'bg-panel text-primary shadow-sm ring-1 ring-border'
+                    : 'text-text-muted hover:text-text-primary hover:bg-panel/50'
+                }`}
+            >
+                DESIGN
+            </button>
+            <button
+                onClick={() => setAppMode('analysis')}
+                className={`px-3 py-1 rounded text-[10px] font-bold tracking-wider transition-all ${
+                    appMode === 'analysis'
+                    ? 'bg-panel text-accent shadow-sm ring-1 ring-border'
+                    : 'text-text-muted hover:text-text-primary hover:bg-panel/50'
+                }`}
+            >
+                ANALYSIS
+            </button>
+      </div>
+
       {/* 2. CENTER-LEFT: View Toggles */}
-      <div className="flex bg-surface p-0.5 rounded-md border border-border shrink-0">
-            {[ViewType.ISOMETRIC, ViewType.RADIAL, ViewType.LONGITUDINAL, ViewType.ALL].map((v) => (
+      <div className="flex bg-surface p-0.5 rounded-md border border-border shrink-0 gap-2">
+            <div className="flex gap-0.5">
+                {[ViewType.ISOMETRIC, ViewType.RADIAL, ViewType.LONGITUDINAL, ViewType.ALL].map((v) => (
+                    <button
+                        key={v}
+                        onClick={() => onViewChange(v)}
+                        title={`Switch to ${v} View`}
+                        className={`px-3 py-1 rounded text-[10px] font-bold tracking-wider transition-all ${
+                            viewMode === v
+                            ? 'bg-panel text-primary shadow-sm ring-1 ring-border'
+                            : 'text-text-muted hover:text-text-primary hover:bg-panel/50'
+                        }`}
+                    >
+                        {v === ViewType.ALL ? 'COMPOSITE' : v.toUpperCase().substring(0, 4)}
+                    </button>
+                ))}
+            </div>
+            
+            <div className="w-px bg-border my-1"></div>
+
+            <div className="flex gap-0.5">
                 <button
-                    key={v}
-                    onClick={() => onViewChange(v)}
-                    title={`Switch to ${v} View`}
+                    onClick={() => setRenderMode('line')}
                     className={`px-3 py-1 rounded text-[10px] font-bold tracking-wider transition-all ${
-                        viewMode === v
+                        renderMode === 'line'
                         ? 'bg-panel text-primary shadow-sm ring-1 ring-border'
                         : 'text-text-muted hover:text-text-primary hover:bg-panel/50'
                     }`}
                 >
-                    {v === ViewType.ALL ? 'COMPOSITE' : v.toUpperCase().substring(0, 4)}
+                    LINE
                 </button>
-            ))}
+                <button
+                    onClick={() => setRenderMode('3d')}
+                    className={`px-3 py-1 rounded text-[10px] font-bold tracking-wider transition-all ${
+                        renderMode === '3d'
+                        ? 'bg-panel text-primary shadow-sm ring-1 ring-border'
+                        : 'text-text-muted hover:text-text-primary hover:bg-panel/50'
+                    }`}
+                >
+                    3D
+                </button>
+            </div>
       </div>
 
       {/* 3. CENTER: Mode Selector */}

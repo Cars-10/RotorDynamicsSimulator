@@ -15,6 +15,7 @@ interface IsometricViewProps {
   onSelectSegment: (index: number) => void;
   systemHealth: { status: 'string' };
   gameMode: boolean;
+  renderMode?: 'line' | '3d';
 }
 
 export const IsometricView: React.FC<IsometricViewProps> = ({
@@ -28,7 +29,8 @@ export const IsometricView: React.FC<IsometricViewProps> = ({
     selectedIndices,
     onSelectSegment,
     systemHealth,
-    gameMode
+    gameMode,
+    renderMode = '3d',
 }) => {
     // Zoom & Pan
     const [zoom, setZoom] = useState(2.1);
@@ -169,12 +171,23 @@ export const IsometricView: React.FC<IsometricViewProps> = ({
 
     const deflectionScale = SCALE_ISOMETRIC * amplitudeScale * DAMPING_MODIFIER;
     
+    // Helical Constants for Iso View
+    const HELIX_PITCH = 12.0; 
+    const HELIX_RADIUS = 0.05; // Smaller radius for Iso view scale
+
     const rings = data.shaftSegments.map((seg, i) => {
         const u = i / (data.shaftSegments.length - 1);
         const xPos = u - 0.5;
         const disp = getDisplacementAt(i, activeMode, data.shaftSegments.length);
-        const yDef = disp * deflectionScale * Math.cos(phase);
-        const zDef = disp * deflectionScale * Math.sin(phase);
+        
+        // Helical Baseline
+        const helixAngle = u * HELIX_PITCH - phase; // Sync with radial view rotation
+        const baseX = HELIX_RADIUS * Math.cos(helixAngle);
+        const baseZ = HELIX_RADIUS * Math.sin(helixAngle);
+
+        const yDef = baseX + disp * deflectionScale * Math.cos(phase);
+        const zDef = baseZ + disp * deflectionScale * Math.sin(phase);
+        
         const center = project(xPos, yDef, zDef);
         const r = seg.outerDiameter * 20 * center.scale;
         return { center, r, seg, u, xPos, yDef, zDef };
@@ -253,39 +266,69 @@ export const IsometricView: React.FC<IsometricViewProps> = ({
                <polyline key={`tr-${i}`} points={pts} fill="none" stroke="#22d3ee" strokeWidth="4" opacity={(i/MAX_TRACE_HISTORY)*0.3}/>
             ))}
 
-            {rings.slice().reverse().map((r1, i) => {
-                const originalIndex = rings.length - 1 - i;
-                if (originalIndex >= rings.length - 1) return null;
-                const r2 = rings[originalIndex + 1];
-                const seg = r1.seg;
+            {renderMode === '3d' ? (
+                // 3D Rendering (Solid Shaft)
+                rings.slice().reverse().map((r1, i) => {
+                    const originalIndex = rings.length - 1 - i;
+                    if (originalIndex >= rings.length - 1) return null;
+                    const r2 = rings[originalIndex + 1];
+                    const seg = r1.seg;
 
-                const dx = r2.center.x - r1.center.x;
-                const dy = r2.center.y - r1.center.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                const nx = -dy / (dist || 1);
-                const ny = dx / (dist || 1);
-                
-                const p1a = { x: r1.center.x + nx * r1.r, y: r1.center.y + ny * r1.r };
-                const p1b = { x: r1.center.x - nx * r1.r, y: r1.center.y - ny * r1.r };
-                const p2a = { x: r2.center.x + nx * r2.r, y: r2.center.y + ny * r2.r };
-                const p2b = { x: r2.center.x - nx * r2.r, y: r2.center.y - ny * r2.r };
-                
-                const pathSkin = `M ${p1a.x} ${p1a.y} L ${p2a.x} ${p2a.y} L ${p2b.x} ${p2b.y} L ${p1b.x} ${p1b.y} Z`;
-                const selected = selectedIndices.has(originalIndex);
-                const color = getMaterialById(seg.materialId).color;
+                    const dx = r2.center.x - r1.center.x;
+                    const dy = r2.center.y - r1.center.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const nx = -dy / (dist || 1);
+                    const ny = dx / (dist || 1);
+                    
+                    const p1a = { x: r1.center.x + nx * r1.r, y: r1.center.y + ny * r1.r };
+                    const p1b = { x: r1.center.x - nx * r1.r, y: r1.center.y - ny * r1.r };
+                    const p2a = { x: r2.center.x + nx * r2.r, y: r2.center.y + ny * r2.r };
+                    const p2b = { x: r2.center.x - nx * r2.r, y: r2.center.y - ny * r2.r };
+                    
+                    const pathSkin = `M ${p1a.x} ${p1a.y} L ${p2a.x} ${p2a.y} L ${p2b.x} ${p2b.y} L ${p1b.x} ${p1b.y} Z`;
+                    const selected = selectedIndices.has(originalIndex);
+                    const color = getMaterialById(seg.materialId).color;
 
-                return (
-                    <g 
-                        key={originalIndex}
-                        onClick={(e) => { e.stopPropagation(); onSelectSegment(originalIndex); }}
-                        className={isEditing ? "cursor-pointer hover:opacity-90" : ""}
-                    >
-                         <path d={pathSkin} fill={color} stroke={selected ? "#22d3ee" : "none"} strokeWidth={selected ? 1 : 0} />
-                         <path d={pathSkin} fill="url(#metal-sheen-iso)" style={{mixBlendMode: 'multiply'}} opacity="0.8" className="pointer-events-none" />
-                         <path d={pathSkin} fill="url(#metal-sheen-iso)" style={{mixBlendMode: 'screen'}} opacity="0.1" className="pointer-events-none" />
-                    </g>
-                );
-            })}
+                    return (
+                        <g 
+                            key={originalIndex}
+                            onClick={(e) => { e.stopPropagation(); onSelectSegment(originalIndex); }}
+                            className={isEditing ? "cursor-pointer hover:opacity-90" : ""}
+                        >
+                             <path d={pathSkin} fill={color} stroke={selected ? "#22d3ee" : "none"} strokeWidth={selected ? 1 : 0} />
+                             <path d={pathSkin} fill="url(#metal-sheen-iso)" style={{mixBlendMode: 'multiply'}} opacity="0.8" className="pointer-events-none" />
+                             <path d={pathSkin} fill="url(#metal-sheen-iso)" style={{mixBlendMode: 'screen'}} opacity="0.1" className="pointer-events-none" />
+                        </g>
+                    );
+                })
+            ) : (
+                // Line Rendering (Simple Wireframe)
+                <>
+                    {/* Main Shaft Line */}
+                    <polyline 
+                        points={tracePath} 
+                        fill="none" 
+                        stroke="#22d3ee" 
+                        strokeWidth="4" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        filter="drop-shadow(0 0 4px #22d3ee)"
+                    />
+                    {/* Segment markers/nodes */}
+                    {rings.map((r, i) => (
+                        <circle 
+                            key={`node-${i}`} 
+                            cx={r.center.x} cy={r.center.y} 
+                            r={3} 
+                            fill={selectedIndices.has(i) ? "#fbbf24" : "#0e7490"} 
+                            stroke="white" 
+                            strokeWidth="1"
+                            onClick={(e) => { e.stopPropagation(); onSelectSegment(i); }}
+                            className="cursor-pointer hover:scale-150 transition-transform"
+                        />
+                    ))}
+                </>
+            )}
             
             <polyline points={tracePath} fill="none" stroke="#22d3ee" strokeWidth="2" strokeOpacity="0.4" pointerEvents="none" />
         </svg>
