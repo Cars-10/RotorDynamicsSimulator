@@ -7,10 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas: '#09090b', // zinc-950
-        panel: '#18181b',  // zinc-900
-        surface: '#27272a', // zinc-800
-        border: '#3f3f46', // zinc-700
+        canvas: '#020617', // slate-950
+        panel: '#0f172a',  // slate-900
+        surface: '#1e293b', // slate-800
+        border: '#334155', // slate-700
         primary: {
           DEFAULT: '#06b6d4', // cyan-500
           hover: '#22d3ee',   // cyan-400
