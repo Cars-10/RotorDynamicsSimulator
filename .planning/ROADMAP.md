@@ -20,6 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: UI Modernization** - High-fidelity visualization overhaul
 - [x] **Phase 3: Expanded Modeling** - Complex components (bearings, seals, materials)
 - [x] **Phase 4: Advanced Analysis** - Campbell diagrams and stability maps
+- [ ] **Phase 5: UI Overhaul & Layout Restructuring** - Modernize UI, dark blue theme, and specific viewport layout
 
 ## Phase Details
 
@@ -61,6 +62,17 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **04-03**: Stability Map Implementation
 - [x] **04-04**: Analysis Integration & Dashboard
 
+### Phase 5: UI Overhaul & Layout Restructuring
+**Goal**: Complete visual transformation to a modern, dark-blue themed engineering tool with a specific multi-viewport layout.
+**Depends on**: Phase 4
+**Requirements**: UI-02
+**Research**: Unlikely (UI implementation)
+**Plans**:
+- [ ] **05-01**: Theme & Layout Overhaul
+
+**Details:**
+"We need significant UI changes. It's reaaly ugly. The radial view should in the top left region. The Iso in the center runing diagionaaly from the bottom left to the to right. The long view should be in the bottom right. Make a Dark blue background. Review the theming and and make it look like a modern UI"
+
 ## Progress
 
 **Execution Order:**
@@ -72,3 +84,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. UI Modernization | 1/1 | Completed | 2026-01-15 |
 | 3. Expanded Modeling | 4/4 | Completed | 2026-01-15 |
 | 4. Advanced Analysis | 4/4 | Completed | 2026-01-15 |
+| 5. UI Overhaul | 0/0 | Not started | - |
