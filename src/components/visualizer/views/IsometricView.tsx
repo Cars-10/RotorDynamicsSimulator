@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SimulationData, ShaftSegment } from '../../../types';
 import { getDisplacementAt } from '../../../utils/visualizerUtils';
+import { getMaterialById } from '../../../constants/materials';
 
 interface IsometricViewProps {
   data: SimulationData;
@@ -271,6 +272,7 @@ export const IsometricView: React.FC<IsometricViewProps> = ({
                 
                 const pathSkin = `M ${p1a.x} ${p1a.y} L ${p2a.x} ${p2a.y} L ${p2b.x} ${p2b.y} L ${p1b.x} ${p1b.y} Z`;
                 const selected = selectedIndices.has(originalIndex);
+                const color = getMaterialById(seg.materialId).color;
 
                 return (
                     <g 
@@ -278,7 +280,7 @@ export const IsometricView: React.FC<IsometricViewProps> = ({
                         onClick={(e) => { e.stopPropagation(); onSelectSegment(originalIndex); }}
                         className={isEditing ? "cursor-pointer hover:opacity-90" : ""}
                     >
-                         <path d={pathSkin} fill={seg.color} stroke={selected ? "#22d3ee" : "none"} strokeWidth={selected ? 1 : 0} />
+                         <path d={pathSkin} fill={color} stroke={selected ? "#22d3ee" : "none"} strokeWidth={selected ? 1 : 0} />
                          <path d={pathSkin} fill="url(#metal-sheen-iso)" style={{mixBlendMode: 'multiply'}} opacity="0.8" className="pointer-events-none" />
                          <path d={pathSkin} fill="url(#metal-sheen-iso)" style={{mixBlendMode: 'screen'}} opacity="0.1" className="pointer-events-none" />
                     </g>

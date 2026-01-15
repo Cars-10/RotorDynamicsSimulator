@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ShaftSegment } from '../types';
-import { MATERIAL_COLORS } from '../constants';
+import { MATERIALS, getMaterialById } from '../constants/materials';
 
 interface ShaftEditorProps {
   segments: ShaftSegment[];
@@ -95,6 +95,7 @@ const ShaftEditor: React.FC<ShaftEditorProps> = ({
         <div className="space-y-[1px] pb-10">
             {segments.map((seg) => {
                 const isSelected = selectedIndices.has(seg.index);
+                const material = getMaterialById(seg.materialId);
                 return (
                     <div 
                         key={seg.index} 
@@ -126,19 +127,20 @@ const ShaftEditor: React.FC<ShaftEditorProps> = ({
                              className="flex justify-center"
                              onClick={(e) => {
                                  e.stopPropagation();
-                                 const nextColor = MATERIAL_COLORS[(MATERIAL_COLORS.indexOf(seg.color) + 1) % MATERIAL_COLORS.length];
+                                 const currentIdx = MATERIALS.findIndex(m => m.id === seg.materialId);
+                                 const nextMaterial = MATERIALS[(currentIdx + 1) % MATERIALS.length];
                                  
                                  if (lockSection && selectedIndices.has(seg.index)) {
-                                     selectedIndices.forEach(idx => onUpdateSegment(idx, { color: nextColor }));
+                                     selectedIndices.forEach(idx => onUpdateSegment(idx, { materialId: nextMaterial.id }));
                                  } else {
-                                     onUpdateSegment(seg.index, { color: nextColor });
+                                     onUpdateSegment(seg.index, { materialId: nextMaterial.id });
                                  }
                              }}
                         >
                             <div 
                                 className="w-6 h-6 rounded-full border border-slate-600 shadow-sm cursor-pointer hover:scale-110 transition-transform" 
-                                style={{ backgroundColor: seg.color }}
-                                title="Click to cycle material"
+                                style={{ backgroundColor: material.color }}
+                                title={`${material.name}\nE: ${material.youngsModulus / 1e9} GPa\nρ: ${material.density} kg/m³`}
                             ></div>
                         </div>
 

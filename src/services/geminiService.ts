@@ -14,7 +14,7 @@ You must generate:
    - Use diameter ~0.9-1.0 for Generator/LP blades.
    - Use diameter ~0.2-0.3 for bearings/couplings.
    - Use diameter ~0.4-0.5 for shafts.
-   - Assign realistic colors (e.g., Generator=Blue, Turbine=Green/Purple, Bearing=Orange).
+   - Assign realistic materialIds (one of: 'steel', 'aluminum', 'titanium').
 2. 5 distinct Natural Frequencies (Critical Speeds).
 3. Mode shapes for each frequency. The mode shape is a vector of exactly 100 displacement points matching the segments.
 4. Q Factors (Quality Factors) for each mode, typically ranging from 5 to 30 for these types of machines.
@@ -60,9 +60,9 @@ export const generateRotorData = async (): Promise<SimulationData> => {
                     index: { type: Type.INTEGER },
                     length: { type: Type.NUMBER },
                     outerDiameter: { type: Type.NUMBER },
-                    color: { type: Type.STRING }
+                    materialId: { type: Type.STRING }
                 },
-                required: ['index', 'length', 'outerDiameter', 'color']
+                required: ['index', 'length', 'outerDiameter', 'materialId']
             }
           },
           modes: {
