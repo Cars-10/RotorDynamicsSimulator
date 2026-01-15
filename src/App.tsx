@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { ViewType } from './types';
 import RotorVisualizer from './components/RotorVisualizer';
-import ViewportControls from './components/ViewportControls';
+import TopBar from './components/TopBar';
 import ShaftEditor from './components/ShaftEditor';
 import AnalysisTable from './components/AnalysisTable';
 import Tutorial from './components/Tutorial';
@@ -181,7 +181,7 @@ const App: React.FC = () => {
   return (
     <MainLayout
       header={
-          <ViewportControls 
+          <TopBar 
             modes={data.modes}
             activeModeIndex={activeModeIndex}
             onSelectMode={setActiveModeIndex}
