@@ -34,6 +34,8 @@ interface ControlsProps {
   systemHealth: { status: 'safe' | 'warning' | 'danger', message: string, estimatedMils: number };
   gameLives: number;
   isDirty: boolean;
+  onSave: () => void;
+  onLoad: (file: File) => void;
 }
 
 const Controls: React.FC<ControlsProps> = ({ 
@@ -65,8 +67,19 @@ const Controls: React.FC<ControlsProps> = ({
   setGameMode,
   systemHealth,
   gameLives,
-  isDirty
+  isDirty,
+  onSave,
+  onLoad
 }) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          onLoad(e.target.files[0]);
+      }
+      if (e.target) e.target.value = '';
+  };
+
   return (
     <div className="w-full bg-slate-900 border-b border-slate-700 p-2 flex flex-col xl:flex-row items-center justify-between gap-3 sticky top-0 z-20 shadow-xl select-none">
       <style>{`
@@ -276,6 +289,29 @@ const Controls: React.FC<ControlsProps> = ({
             <span className="text-[8px] text-slate-500 uppercase">Operating</span>
             <span className="text-[10px] font-mono font-bold text-white">{operatingRpm} RPM</span>
         </div>
+
+        <button
+            onClick={onSave}
+            title="Save Simulation: Download current state as JSON."
+            className="px-3 py-1.5 rounded text-[10px] font-bold border border-slate-700 bg-slate-800 text-slate-400 hover:text-white"
+        >
+            SAVE
+        </button>
+
+        <button
+            onClick={() => fileInputRef.current?.click()}
+            title="Load Simulation: Import JSON state."
+            className="px-3 py-1.5 rounded text-[10px] font-bold border border-slate-700 bg-slate-800 text-slate-400 hover:text-white"
+        >
+            LOAD
+        </button>
+        <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept=".json" 
+            style={{ display: 'none' }} 
+        />
         
         <button
             onClick={onGenerate}
