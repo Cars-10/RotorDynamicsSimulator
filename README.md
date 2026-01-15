@@ -1,62 +1,20 @@
-# Hydrogen-Cooled Generator Rotor Dynamics Simulator
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-An interactive rotor dynamics simulator for power generation turbine trains, featuring real-time vibration analysis, critical speed detection, and AI-generated rotor configurations.
+# Run and deploy your AI Studio app
 
-## Features
+This contains everything you need to run your app locally.
 
-- **3D Rotor Visualization** - Real-time animation of rotor modes and vibrations
-- **Interactive Shaft Editor** - Modify rotor geometry and see immediate physics updates
-- **Critical Speed Analysis** - Automatic detection of resonance zones
-- **Bearing Analysis** - Polar plots for bearing loads and vibration
-- **Game Mode** - Challenge yourself to tune the rotor within safe operating parameters
-- **AI-Powered** - Uses Gemini AI to generate realistic rotor dynamics data
+View your app in AI Studio: https://ai.studio/apps/drive/1Hp_GSX_NWR0ehkZlmEFtlriWXPCkOQzZ
 
-## Quick Start
+## Run Locally
 
-### Prerequisites
+**Prerequisites:**  Node.js
 
-- Node.js (v16 or higher)
-- Gemini API key ([Get one here](https://aistudio.google.com/apikey))
 
-### Installation
-
-1. **Clone and install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Set up your API key:**
-
-   Open `.env.local` and add your Gemini API key:
-   ```
-   GEMINI_API_KEY=your_actual_api_key_here
-   ```
-
-3. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open in browser:**
-
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Usage
-
-- **Generate New Rotor** - Click "Generate" to create a new rotor configuration
-- **View Modes** - Select different critical speed modes from the dropdown
-- **Edit Geometry** - Toggle "Edit Mode" to modify shaft segments
-- **Game Mode** - Enable to challenge yourself to avoid resonance zones
-- **Analysis** - View detailed frequency analysis and bearing plots
-
-## Technology Stack
-
-- React 19 + TypeScript
-- Vite
-- Google Gemini AI
-- Tailwind CSS
-- Canvas API for visualization
-
-## License
-
-MIT
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
