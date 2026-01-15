@@ -13,7 +13,8 @@ import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { ComponentPropertiesEditor } from './components/editors/ComponentPropertiesEditor';
 import { Button } from './components/ui/Button';
-import { Save, Upload, FileText, HelpCircle, PenTool } from 'lucide-react';
+import { Save, Upload, FileText, HelpCircle, PenTool, Activity } from 'lucide-react';
+import { AnalysisDashboard } from './components/analysis/AnalysisDashboard';
 
 const App: React.FC = () => {
   const {
@@ -31,6 +32,8 @@ const App: React.FC = () => {
   } = useSimulation();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [appMode, setAppMode] = useState<'design' | 'analysis'>('design');
 
   // Start in Composite View (ALL) as requested
   const [viewMode, setViewMode] = useState<ViewType>(ViewType.ALL);
@@ -227,6 +230,18 @@ const App: React.FC = () => {
               >
                   <FileText className="h-4 w-4" />
               </Button>
+
+              <Button 
+                variant={appMode === 'analysis' ? 'primary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setAppMode(appMode === 'analysis' ? 'design' : 'analysis')} 
+                title="Advanced Analysis"
+                className={appMode === 'analysis' ? "bg-primary/10 text-primary" : ""}
+              >
+                  <Activity className="h-4 w-4 mr-2" />
+                  Analysis
+              </Button>
+
                <Button variant="ghost" size="sm" onClick={() => setShowTutorial(true)} title="Tutorial">
                   <HelpCircle className="h-4 w-4" />
               </Button>
@@ -310,41 +325,47 @@ const App: React.FC = () => {
                 </div>
             )}
             
-            {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
+            {appMode === 'analysis' ? (
+                <AnalysisDashboard />
+            ) : (
+                <>
+                    {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
 
-            {showReport && (
-                <AnalysisTable 
-                  modes={data.modes} 
-                  onClose={() => setShowReport(false)} 
-                  operatingRpm={operatingRpm}
-                />
+                    {showReport && (
+                        <AnalysisTable 
+                          modes={data.modes} 
+                          onClose={() => setShowReport(false)} 
+                          operatingRpm={operatingRpm}
+                        />
+                    )}
+                    
+                    <RotorVisualizer 
+                        data={data}
+                        activeModeIndex={activeModeIndex}
+                        isPlaying={isPlaying}
+                        viewMode={viewMode}
+                        showTrace={showTrace}
+                        amplitudeScale={amplitudeScale}
+                        damping={damping}
+                        isEditing={isEditing}
+                        onUpdateSegment={updateSegmentWithPhysics}
+                        selectedSegmentIndex={Array.from(selectedIndices)[0] ?? null}
+                        selectedIndices={selectedIndices}
+                        onSelectSegment={(idx) => handleSelectSegment(idx, false)}
+                        onSelectComponent={handleSelectComponent}
+                        systemHealth={systemHealth}
+                        gameMode={gameMode}
+                    />
+
+                    <BearingAnalyst 
+                        bearings={data.rotors.filter(r => r.type === 'bearing')} 
+                        activeMode={data.modes[activeModeIndex]} 
+                        segments={data.shaftSegments}
+                        amplitudeScale={amplitudeScale}
+                        damping={damping}
+                    />
+                </>
             )}
-            
-            <RotorVisualizer 
-                data={data}
-                activeModeIndex={activeModeIndex}
-                isPlaying={isPlaying}
-                viewMode={viewMode}
-                showTrace={showTrace}
-                amplitudeScale={amplitudeScale}
-                damping={damping}
-                isEditing={isEditing}
-                onUpdateSegment={updateSegmentWithPhysics}
-                selectedSegmentIndex={Array.from(selectedIndices)[0] ?? null}
-                selectedIndices={selectedIndices}
-                onSelectSegment={(idx) => handleSelectSegment(idx, false)}
-                onSelectComponent={handleSelectComponent}
-                systemHealth={systemHealth}
-                gameMode={gameMode}
-            />
-
-            <BearingAnalyst 
-                bearings={data.rotors.filter(r => r.type === 'bearing')} 
-                activeMode={data.modes[activeModeIndex]} 
-                segments={data.shaftSegments}
-                amplitudeScale={amplitudeScale}
-                damping={damping}
-            />
       </div>
     </MainLayout>
   );
