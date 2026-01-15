@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { ViewType } from './types';
 import RotorVisualizer from './components/RotorVisualizer';
 import Controls from './components/Controls';
@@ -8,6 +8,11 @@ import Tutorial from './components/Tutorial';
 import BearingAnalyst from './components/BearingAnalyst';
 import { useSimulation } from './hooks/useSimulation';
 import { exportSimulation, importSimulation } from './utils/fileStorage';
+import { MainLayout } from './components/layout/MainLayout';
+import { Header } from './components/layout/Header';
+import { Sidebar } from './components/layout/Sidebar';
+import { Button } from './components/ui/Button';
+import { Save, Upload, FileText, HelpCircle, PenTool } from 'lucide-react';
 
 const App: React.FC = () => {
   const {
@@ -22,6 +27,8 @@ const App: React.FC = () => {
     generate: generateSimulation,
     updateSegmentWithPhysics
   } = useSimulation();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Start in Composite View (ALL) as requested
   const [viewMode, setViewMode] = useState<ViewType>(ViewType.ALL);
@@ -116,6 +123,13 @@ const App: React.FC = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        handleLoad(e.target.files[0]);
+    }
+    if (e.target) e.target.value = '';
+  };
+
   const toggleEdit = () => {
       setIsEditing(!isEditing);
       if (!isEditing) setSelectedIndices(new Set());
@@ -138,7 +152,86 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
+    <MainLayout
+      header={
+        <Header>
+           <div className="flex items-center gap-3">
+              <div className="flex flex-col border-r border-border pr-4 mr-2">
+                  <select 
+                      value={machineType} 
+                      onChange={(e) => setMachineType(e.target.value as any)}
+                      className="bg-transparent text-[10px] text-text-secondary focus:outline-none cursor-pointer hover:text-text-primary"
+                  >
+                      <option value="hydrogen">H2 Cooled (2-Pole)</option>
+                      <option value="nuclear">Nuclear (4-Pole)</option>
+                  </select>
+                  <div className="flex justify-between items-center w-full gap-2">
+                       <span className="text-[10px] font-mono text-primary font-bold">{operatingRpm} RPM</span>
+                       <select 
+                          value={gridFreq}
+                          onChange={(e) => setGridFreq(parseInt(e.target.value) as any)}
+                          className="bg-transparent text-[10px] text-text-muted focus:outline-none cursor-pointer hover:text-text-primary"
+                      >
+                          <option value="60">60Hz</option>
+                          <option value="50">50Hz</option>
+                      </select>
+                  </div>
+              </div>
+              
+              <Button variant="ghost" size="sm" onClick={handleSave} title="Save Simulation">
+                  <Save className="h-4 w-4" />
+              </Button>
+               <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} title="Load Simulation">
+                  <Upload className="h-4 w-4" />
+              </Button>
+              <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept=".json" 
+                  style={{ display: 'none' }} 
+              />
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button 
+                variant={showReport ? 'primary' : 'ghost'} 
+                size="sm" 
+                onClick={() => setShowReport(!showReport)} 
+                title="Analysis Report"
+                className={showReport ? "bg-primary/10 text-primary" : ""}
+              >
+                  <FileText className="h-4 w-4" />
+              </Button>
+               <Button variant="ghost" size="sm" onClick={() => setShowTutorial(true)} title="Tutorial">
+                  <HelpCircle className="h-4 w-4" />
+              </Button>
+               <Button 
+                  variant={isEditing ? 'primary' : 'ghost'} 
+                  size="sm" 
+                  onClick={toggleEdit}
+                  title="Toggle Shaft Editor"
+                  className={isEditing ? "bg-primary text-primary-foreground" : ""}
+              >
+                  <PenTool className="h-4 w-4 mr-2" />
+                  Editor
+              </Button>
+           </div>
+        </Header>
+      }
+      showSidebar={isEditing}
+      sidebar={
+          <Sidebar title="Shaft Editor" onClose={() => setIsEditing(false)}>
+              <ShaftEditor 
+                  segments={data.shaftSegments} 
+                  onUpdateSegment={updateSegmentWithPhysics} 
+                  onClose={() => setIsEditing(false)}
+                  selectedIndices={selectedIndices}
+                  onSelectSegment={handleSelectSegment}
+              />
+          </Sidebar>
+      }
+    >
       <Controls 
         modes={data.modes}
         activeModeIndex={activeModeIndex}
@@ -173,25 +266,9 @@ const App: React.FC = () => {
         onLoad={handleLoad}
       />
 
-      {/* Main Layout: Sidebar (if editing) + Visualizer Area */}
-      <div className="flex flex-1 overflow-hidden relative">
-        
-        {/* Editor Sidebar */}
-        {isEditing && (
-             <div className="w-64 h-full shrink-0 animate-in slide-in-from-left-10 duration-200">
-                <ShaftEditor 
-                    segments={data.shaftSegments} 
-                    onUpdateSegment={updateSegmentWithPhysics} 
-                    onClose={() => setIsEditing(false)}
-                    selectedIndices={selectedIndices}
-                    onSelectSegment={handleSelectSegment}
-                />
-             </div>
-        )}
-
-        <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative h-full">
             {error && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-500/90 text-white px-6 py-3 rounded shadow-xl z-50 flex items-center gap-2">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-danger/90 text-white px-6 py-3 rounded shadow-xl z-50 flex items-center gap-2">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     {error}
                     <button onClick={() => setError(null)} className="ml-4 opacity-70 hover:opacity-100">✕</button>
@@ -218,14 +295,13 @@ const App: React.FC = () => {
                 damping={damping}
                 isEditing={isEditing}
                 onUpdateSegment={updateSegmentWithPhysics}
-                selectedSegmentIndex={Array.from(selectedIndices)[0] ?? null} // Backward compat if needed, but we used selectedIndices now in Visualizer below
+                selectedSegmentIndex={Array.from(selectedIndices)[0] ?? null}
                 selectedIndices={selectedIndices}
-                onSelectSegment={(idx) => handleSelectSegment(idx, false)} // Simple select in visualizer
+                onSelectSegment={(idx) => handleSelectSegment(idx, false)}
                 systemHealth={systemHealth}
                 gameMode={gameMode}
             />
 
-            {/* Bearing Polar Plots Overlay (Always active for analysis) */}
             <BearingAnalyst 
                 bearings={data.rotors.filter(r => r.type === 'bearing')} 
                 activeMode={data.modes[activeModeIndex]} 
@@ -233,9 +309,8 @@ const App: React.FC = () => {
                 amplitudeScale={amplitudeScale}
                 damping={damping}
             />
-        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
