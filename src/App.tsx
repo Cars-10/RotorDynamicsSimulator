@@ -1,21 +1,28 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { SimulationData, ViewType, ShaftSegment } from './types';
-import { generateRotorData } from './services/geminiService';
-import { DEFAULT_ROTOR_DATA } from './constants';
+import { ViewType } from './types';
 import RotorVisualizer from './components/RotorVisualizer';
 import Controls from './components/Controls';
 import ShaftEditor from './components/ShaftEditor';
 import AnalysisTable from './components/AnalysisTable';
 import Tutorial from './components/Tutorial';
 import BearingAnalyst from './components/BearingAnalyst';
+import { useSimulation } from './hooks/useSimulation';
 
 const App: React.FC = () => {
-  const [data, setData] = useState<SimulationData>(DEFAULT_ROTOR_DATA);
-  const [activeModeIndex, setActiveModeIndex] = useState(0);
+  const {
+    data,
+    activeModeIndex,
+    setActiveModeIndex,
+    isGenerating,
+    error,
+    setError,
+    isDirty,
+    generate: generateSimulation,
+    updateSegmentWithPhysics
+  } = useSimulation();
+
   // Start in Composite View (ALL) as requested
   const [viewMode, setViewMode] = useState<ViewType>(ViewType.ALL);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [showTrace, setShowTrace] = useState(false);
   const [amplitudeScale, setAmplitudeScale] = useState(1.0);
@@ -40,7 +47,6 @@ const App: React.FC = () => {
   // Game State
   const [gameMode, setGameMode] = useState(false);
   const [gameLives, setGameLives] = useState(5);
-  const [isDirty, setIsDirty] = useState(false); // Changes made but not regenerated
   
   // Selection Sync State (Multi-select)
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
@@ -85,53 +91,12 @@ const App: React.FC = () => {
   const handleGenerate = useCallback(async () => {
     if (gameMode && gameLives <= 0) return;
 
-    setIsGenerating(true);
-    setError(null);
-    try {
-      const newData = await generateRotorData();
-      setData(newData);
-      setActiveModeIndex(0);
-      setIsDirty(false); // Reset dirty flag after successful run
+    const success = await generateSimulation();
       
-      if (gameMode) {
-          setGameLives(prev => Math.max(0, prev - 1));
-      }
-    } catch (e) {
-      console.error(e);
-      setError("Failed to generate new simulation data. Check API Key or try again.");
-    } finally {
-      setIsGenerating(false);
+    if (success && gameMode) {
+        setGameLives(prev => Math.max(0, prev - 1));
     }
-  }, [gameMode, gameLives]);
-
-  const handleUpdateSegment = useCallback((index: number, updates: Partial<ShaftSegment>) => {
-      setData(prev => {
-          const newSegments = [...prev.shaftSegments];
-          newSegments[index] = { ...newSegments[index], ...updates };
-          return { ...prev, shaftSegments: newSegments };
-      });
-      setIsDirty(true);
-  }, []);
-
-  // Update modes based on shaft changes (Mock physics simulation)
-  const handleUpdateSegmentWithPhysics = (index: number, updates: Partial<ShaftSegment>) => {
-      handleUpdateSegment(index, updates);
-      
-      if (updates.outerDiameter) {
-         setData(prev => {
-            const oldSeg = prev.shaftSegments[index];
-            const diaChange = updates.outerDiameter! - oldSeg.outerDiameter;
-            const rpmShiftPercent = diaChange * 0.05; 
-            
-            const newModes = prev.modes.map(m => ({
-                 ...m,
-                 rpm: m.rpm * (1 + rpmShiftPercent),
-                 frequencyHz: (m.rpm * (1 + rpmShiftPercent)) / 60
-             }));
-             return { ...prev, modes: newModes };
-         });
-      }
-  };
+  }, [gameMode, gameLives, generateSimulation]);
 
   const toggleEdit = () => {
       setIsEditing(!isEditing);
@@ -196,7 +161,7 @@ const App: React.FC = () => {
              <div className="w-64 h-full shrink-0 animate-in slide-in-from-left-10 duration-200">
                 <ShaftEditor 
                     segments={data.shaftSegments} 
-                    onUpdateSegment={handleUpdateSegmentWithPhysics} 
+                    onUpdateSegment={updateSegmentWithPhysics} 
                     onClose={() => setIsEditing(false)}
                     selectedIndices={selectedIndices}
                     onSelectSegment={handleSelectSegment}
@@ -232,7 +197,7 @@ const App: React.FC = () => {
                 amplitudeScale={amplitudeScale}
                 damping={damping}
                 isEditing={isEditing}
-                onUpdateSegment={handleUpdateSegmentWithPhysics}
+                onUpdateSegment={updateSegmentWithPhysics}
                 selectedSegmentIndex={Array.from(selectedIndices)[0] ?? null} // Backward compat if needed, but we used selectedIndices now in Visualizer below
                 selectedIndices={selectedIndices}
                 onSelectSegment={(idx) => handleSelectSegment(idx, false)} // Simple select in visualizer
